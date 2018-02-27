@@ -89,3 +89,30 @@ ggplot(brewerybeer, aes(x=brewerybeer$ABV, y=brewerybeer$IBU)) + geom_point() +
 library(wordcloud)
 wordcloud(gsub(" ","",beers$Style), scale = c(3, 0.4), random.color=TRUE, rot.per=.3, colors=brewer.pal(8, "Dark2"))
 ```
+
+####Plot brewery counts by state
+
+```{r, eval=F, echo=T}
+library(ggmap)
+BreweryByState<- breweries %>% group_by(State) %>% summarize(count=n())
+BreweryByState$lon <- geocode(gsub(" ","",BreweryByState$State))$lon
+BreweryByState$lat <- geocode(gsub(" ","",BreweryByState$State))$lat
+
+map_us <- get_map(location = "United States", zoom = 4, color = "color")
+ggmap(map_us, legend = "bottomright", extent = "device") + 
+geom_point(data = BreweryByState, aes(x = lon, y = lat, size = Count), colour = "red") + 
+  geom_text(data = BreweryByState, aes(x = lon, y = lat, label = Count), colour = "black", size = 3)
+```
+
+####Plot cities with breweries
+
+```{r, eval=F, echo=T}
+library(ggmap)
+BreweryByCity<- breweries %>% group_by(City) %>% summarize(count=n())
+BreweryByCity$lon <- geocode(gsub(" ","",BreweryByCity$City))$lon
+BreweryByCity$lat <- geocode(gsub(" ","",BreweryByCity$City))$lat
+
+map_us <- get_map(location = "United States", zoom = 4, color = "color")
+ggmap(map_us, legend = "bottomright", extent = "device") + 
+  geom_point(data = BreweryByCity, aes(x = lon, y = lat), colour = "red")
+```
