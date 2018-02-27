@@ -1,0 +1,91 @@
+---
+title: "DDS Case Study"
+author: "Shravan Reddy"
+date: "2/25/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+breweries <- read.csv(file="~/Desktop/DDS/CaseStudy1/Breweries.csv", header = TRUE)
+beers <- read.csv(file="~/Desktop/DDS/CaseStudy1/Beers.csv", header = TRUE)
+```
+
+####1) How many breweries are present in each state?
+
+
+```{r}
+as.data.frame(table(breweries$State))
+```
+
+####2) Merge beer data with the breweries data. Print the first 6 observations and the last six observations to check the merged file.
+
+
+```{r}
+brewerybeer <- merge(breweries, beers, by.x = c("Brew_ID"), by.y = c("Brewery_id"))
+head(brewerybeer,6)
+tail(brewerybeer,6)
+```
+
+####3) Report the number of NA’s in each column.
+
+
+```{r}
+sapply(brewerybeer, function(x) sum(is.na(x)))
+#apply(is.na(brewerybeer),2,sum)
+#colSums(is.na(brewerybeer))
+```
+
+####4) Compute the median alcohol content and international bitterness unit for each state. Plot a bar chart to compare.
+
+
+```{r}
+library(dplyr)
+library(ggplot2)
+Statemedians <- brewerybeer %>%
+  group_by(State) %>%
+  summarize(medianABV = median(ABV, na.rm = TRUE), medianIBU = median(IBU, na.rm = TRUE))
+ggplot(Statemedians,aes(x=State, y=medianABV)) + geom_bar(stat="identity")
+ggplot(Statemedians,aes(x=State, y=medianIBU)) + geom_bar(stat="identity")
+```
+
+####5) a.Which state has the maximum alcoholic (ABV) beer?
+
+
+```{r}
+brewerybeer[which.max(brewerybeer$ABV),4]
+
+```
+
+####5) b.Which state has the most bitter (IBU) beer?
+
+
+```{r}
+brewerybeer[which.max(brewerybeer$IBU),4]
+```
+
+####6) Summary statistics for the ABV variable.
+
+
+```{r}
+summary(brewerybeer$ABV)
+```
+
+####7) Is there an apparent relationship between the bitterness of the beer and its alcoholic content? Draw a scatter plot.
+
+
+```{r}
+ggplot(brewerybeer, aes(x=brewerybeer$ABV, y=brewerybeer$IBU)) + geom_point() +   
+  geom_text(data=subset(brewerybeer, ABV > .1),
+            aes(x=ABV, y=IBU,label=Name.y),check_overlap = TRUE, vjust = 0, nudge_y = 1.2) +
+  geom_text(data=subset(brewerybeer, IBU > 125),
+            aes(x=ABV, y=IBU,label=Name.y),check_overlap = TRUE, hjust = 0, nudge_x = 0.001)
+```
+
+###Extras
+####Wordcloud of beer styles
+
+```{r}
+library(wordcloud)
+wordcloud(gsub(" ","",beers$Style), scale = c(3, 0.4), random.color=TRUE, rot.per=.3, colors=brewer.pal(8, "Dark2"))
+```
